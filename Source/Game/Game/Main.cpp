@@ -1,16 +1,16 @@
 #include "Core/Core.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/Model.h"
+#include "Input/InputSystem.h"
 #include <iostream>
 #include <vector>
 
 using namespace std;
 
-using vec2 = kiko::Vector2;
-
 class Star
 {
 public:
-	Star(const vec2& pos, const vec2& vel) :
+	Star(const kiko::vec2& pos, const kiko::vec2& vel) :
 		m_pos{ pos },
 		m_vel{ vel }
 	{}
@@ -28,10 +28,9 @@ public:
 	}
 
 public:
-	kiko::Vector2 m_pos;
-	kiko::Vector2 m_vel;
+	kiko::vec2 m_pos;
+	kiko::vec2 m_vel;
 };
-
 
 
 int main(int argc, char* argv[])
@@ -42,6 +41,16 @@ int main(int argc, char* argv[])
 	renderer.Initialize();
 	renderer.CreateWindow("CSC196", 800, 600);
 
+	kiko::InputSystem inputSystem;
+	inputSystem.Initialize();
+
+
+	std::vector<kiko::vec2> points{ { -10, 5 }, { 10, 5 }, { 0, -5 }, { -10, 5 } };
+	kiko::Model model{ points };
+
+	kiko::vec2 v{ 5, 5 };
+	v.Normalize();
+
 	vector<Star> stars;
 	for (int i = 0; i < 1000; i++)
 	{
@@ -51,9 +60,16 @@ int main(int argc, char* argv[])
 		stars.push_back(Star(pos, vel));
 	}
 
-
-	while (true)
+	bool quit = false;
+	while (!quit)
 	{
+		inputSystem.Update();
+		if (inputSystem.GetKeyDown(SDL_SCANCODE_ESCAPE))
+		{
+			quit = true;
+		}
+
+
 		renderer.SetColor(0, 0, 0, 0);
 		renderer.BeginFrame();
 		// draw
@@ -66,14 +82,7 @@ int main(int argc, char* argv[])
 			star.Draw(renderer);
 		}
 
-
-		//for (int i = 0; i < 10000; i++)
-		//{
-		//	kiko::Vector2 pos(kiko::random(renderer.GetWidth()), kiko::random(renderer.GetHeight()));
-		//	renderer.SetColor(kiko::random(256), kiko::random(256), kiko::random(256), 255);
-		//	renderer.DrawPoint(pos.x, pos.y);
-		//}
-		
+		model.Draw(renderer, { 400, 300 }, 4.0f);
 		
 		renderer.EndFrame();
 	}
