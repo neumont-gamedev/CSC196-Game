@@ -32,7 +32,7 @@ namespace kiko
 		std::vector<uint8_t> m_prevKeyboardState;
 
 		Vector2 m_mousePosition;
-		std::array<uint8_t, 3> m_mouseButtonState;
-		std::array<uint8_t, 3> m_prevMouseButtonState;
+		std::array<uint8_t, 3> m_mouseButtonState{ 0, 0, 0 };
+		std::array<uint8_t, 3> m_prevMouseButtonState{ 0, 0, 0 };
 	};
 }

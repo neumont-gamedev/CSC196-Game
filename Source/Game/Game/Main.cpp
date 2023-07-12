@@ -59,7 +59,10 @@ int main(int argc, char* argv[])
 	}
 
 	kiko::vec2 position{ 400, 300 };
+	kiko::Transform transform{ { 400, 300 }, 0, 3 };
+
 	float speed = 200;
+	float turnRate = kiko::DegreesToRadians(180);
 
 	// main game loop
 	bool quit = false;
@@ -72,13 +75,26 @@ int main(int argc, char* argv[])
 			quit = true;
 		}
 
-		kiko::vec2 direction;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_W)) direction.y = -1;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_S)) direction.y =  1;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_A)) direction.x = -1;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_D)) direction.x =  1;
+		float rotate = 0;
+		if (inputSystem.GetKeyDown(SDL_SCANCODE_A)) rotate = -1;
+		if (inputSystem.GetKeyDown(SDL_SCANCODE_D)) rotate =  1;
+		transform.rotation += rotate * turnRate * kiko::g_time.GetDeltaTime(); 
 
-		position += direction * speed * kiko::g_time.GetDeltaTime();
+
+		float thrust = 0;
+		if (inputSystem.GetKeyDown(SDL_SCANCODE_W)) thrust = 1;
+
+		kiko::vec2 forward = kiko::vec2{ 0, -1 }.Rotate(transform.rotation);
+		transform.position += forward * speed * thrust * kiko::g_time.GetDeltaTime();
+		transform.position.x = kiko::Wrap(transform.position.x, (float)renderer.GetWidth());
+		transform.position.y = kiko::Wrap(transform.position.y, (float)renderer.GetHeight());
+
+		//kiko::vec2 direction;
+		//if (inputSystem.GetKeyDown(SDL_SCANCODE_W)) direction.y = -1;
+		//if (inputSystem.GetKeyDown(SDL_SCANCODE_S)) direction.y =  1;
+		//if (inputSystem.GetKeyDown(SDL_SCANCODE_A)) direction.x = -1;
+		//if (inputSystem.GetKeyDown(SDL_SCANCODE_D)) direction.x =  1;
+		//position += direction * speed * kiko::g_time.GetDeltaTime();
 
 		renderer.SetColor(0, 0, 0, 0);
 		renderer.BeginFrame();
@@ -90,11 +106,9 @@ int main(int argc, char* argv[])
 			star.Draw(renderer);
 		}
 
-		model.Draw(renderer, position, 4.0f);
+		model.Draw(renderer, transform.position, transform.rotation, transform.scale);
 		
 		renderer.EndFrame();
-
-		//std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	return 0;
