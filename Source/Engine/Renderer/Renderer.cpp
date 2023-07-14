@@ -1,8 +1,9 @@
 #include "Renderer.h"
 
-
 namespace kiko
 {
+	Renderer g_renderer;
+
 	bool Renderer::Initialize()
 	{
 		SDL_Init(SDL_INIT_VIDEO);

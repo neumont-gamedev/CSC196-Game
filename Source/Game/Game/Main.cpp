@@ -2,6 +2,9 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/Model.h"
 #include "Input/InputSystem.h"
+#include "Player.h"
+#include "Enemy.h"
+
 #include <iostream>
 #include <vector>
 #include <thread>
@@ -38,21 +41,18 @@ int main(int argc, char* argv[])
 	kiko::seedRandom((unsigned int)time(nullptr));
 	kiko::setFilePath("assets");
 
-	kiko::Renderer renderer;
-	renderer.Initialize();
-	renderer.CreateWindow("CSC196", 800, 600);
+	kiko::g_renderer.Initialize();
+	kiko::g_renderer.CreateWindow("CSC196", 800, 600);
 
-	kiko::InputSystem inputSystem;
-	inputSystem.Initialize();
+	kiko::g_inputSystem.Initialize();
 
-	//std::vector<kiko::vec2> points{ { -10, 5 }, { 10, 5 }, { 0, -5 }, { -10, 5 } };
 	kiko::Model model;
 	model.Load("ship.txt");
 
 	vector<Star> stars;
 	for (int i = 0; i < 1000; i++)
 	{
-		kiko::Vector2 pos(kiko::Vector2(kiko::random(renderer.GetWidth()), kiko::random(renderer.GetHeight())));
+		kiko::Vector2 pos(kiko::Vector2(kiko::random(kiko::g_renderer.GetWidth()), kiko::random(kiko::g_renderer.GetHeight())));
 		kiko::Vector2 vel(kiko::randomf(100, 200), 0.0f);
 
 		stars.push_back(Star(pos, vel));
@@ -62,53 +62,50 @@ int main(int argc, char* argv[])
 	kiko::Transform transform{ { 400, 300 }, 0, 3 };
 
 	float speed = 200;
-	float turnRate = kiko::DegreesToRadians(180);
+	constexpr float turnRate = kiko::DegreesToRadians(180);
+
+	Player player{ 200, kiko::Pi, { { 400, 300 }, 0, 6 }, model };
+
+	std::vector<Enemy> enemies;
+	for (int i = 0; i < 100; i++)
+	{
+		Enemy enemy{ 300, kiko::Pi, { { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model};
+		enemies.push_back(enemy);
+	}
 
 	// main game loop
 	bool quit = false;
 	while (!quit)
 	{
+		// update engine
 		kiko::g_time.Tick();
-		inputSystem.Update();
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_ESCAPE))
+		kiko::g_inputSystem.Update();
+		if (kiko::g_inputSystem.GetKeyDown(SDL_SCANCODE_ESCAPE))
 		{
 			quit = true;
 		}
 
-		float rotate = 0;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_A)) rotate = -1;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_D)) rotate =  1;
-		transform.rotation += rotate * turnRate * kiko::g_time.GetDeltaTime(); 
+		// update game
+		player.Update(kiko::g_time.GetDeltaTime());
+		for (auto& enemy : enemies)	enemy.Update(kiko::g_time.GetDeltaTime());
 
-
-		float thrust = 0;
-		if (inputSystem.GetKeyDown(SDL_SCANCODE_W)) thrust = 1;
-
-		kiko::vec2 forward = kiko::vec2{ 0, -1 }.Rotate(transform.rotation);
-		transform.position += forward * speed * thrust * kiko::g_time.GetDeltaTime();
-		transform.position.x = kiko::Wrap(transform.position.x, (float)renderer.GetWidth());
-		transform.position.y = kiko::Wrap(transform.position.y, (float)renderer.GetHeight());
-
-		//kiko::vec2 direction;
-		//if (inputSystem.GetKeyDown(SDL_SCANCODE_W)) direction.y = -1;
-		//if (inputSystem.GetKeyDown(SDL_SCANCODE_S)) direction.y =  1;
-		//if (inputSystem.GetKeyDown(SDL_SCANCODE_A)) direction.x = -1;
-		//if (inputSystem.GetKeyDown(SDL_SCANCODE_D)) direction.x =  1;
-		//position += direction * speed * kiko::g_time.GetDeltaTime();
-
-		renderer.SetColor(0, 0, 0, 0);
-		renderer.BeginFrame();
-		// draw
+		// draw game
+		kiko::g_renderer.SetColor(0, 0, 0, 0);
+		kiko::g_renderer.BeginFrame();
 		for (auto& star : stars)
 		{
-			star.Update(renderer.GetWidth(), renderer.GetHeight());
-			renderer.SetColor(kiko::random(256), kiko::random(256), kiko::random(256), 255);
-			star.Draw(renderer);
+			star.Update(kiko::g_renderer.GetWidth(), kiko::g_renderer.GetHeight());
+			kiko::g_renderer.SetColor(kiko::random(256), kiko::random(256), kiko::random(256), 255);
+			star.Draw(kiko::g_renderer);
 		}
-
-		model.Draw(renderer, transform.position, transform.rotation, transform.scale);
+		player.Draw(kiko::g_renderer);
+		for (auto& enemy : enemies)
+		{
+			kiko::g_renderer.SetColor(kiko::random(256), kiko::random(256), kiko::random(256), 255);
+			enemy.Draw(kiko::g_renderer);
+		}
 		
-		renderer.EndFrame();
+		kiko::g_renderer.EndFrame();
 	}
 
 	return 0;
