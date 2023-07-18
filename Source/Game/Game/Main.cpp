@@ -11,6 +11,7 @@
 #include <vector>
 #include <thread>
 
+
 using namespace std;
 
 class Star
@@ -40,6 +41,8 @@ public:
 
 int main(int argc, char* argv[])
 {
+	kiko::g_memoryTracker.DisplayInfo();
+
 	kiko::seedRandom((unsigned int)time(nullptr));
 	kiko::setFilePath("assets");
 
@@ -64,12 +67,13 @@ int main(int argc, char* argv[])
 	}
 
 	kiko::Scene scene;
+	unique_ptr<Player> player = make_unique<Player>(200.0f, kiko::Pi, kiko::Transform{ { 400, 300 }, 0, 6 }, model);
+	scene.Add(std::move(player));
 
-	scene.Add(new Player{ 200, kiko::Pi, { { 400, 300 }, 0, 6 }, model });
 	for (int i = 0; i < 5; i++)
 	{
-		Enemy* enemy = new Enemy{ 300, kiko::Pi, { { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model};
-		scene.Add(enemy);
+		unique_ptr<Enemy> enemy = make_unique<Enemy>(300.0f, kiko::Pi, kiko::Transform{ { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model);
+		scene.Add(std::move(enemy));
 	}
 
 	// main game loop
@@ -102,6 +106,10 @@ int main(int argc, char* argv[])
 		
 		kiko::g_renderer.EndFrame();
 	}
+
+	stars.clear();
+	scene.RemoveAll();
+	kiko::g_memoryTracker.DisplayInfo();
 
 	return 0;
 }
