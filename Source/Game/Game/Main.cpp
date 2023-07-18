@@ -2,6 +2,8 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/Model.h"
 #include "Input/InputSystem.h"
+#include "Audio/AudioSystem.h"
+#include "Framework/Scene.h"
 #include "Player.h"
 #include "Enemy.h"
 
@@ -46,6 +48,9 @@ int main(int argc, char* argv[])
 
 	kiko::g_inputSystem.Initialize();
 
+	kiko::g_audioSystem.Initialize();
+	kiko::g_audioSystem.AddAudio("hit", "hit.wav");
+
 	kiko::Model model;
 	model.Load("ship.txt");
 
@@ -58,19 +63,13 @@ int main(int argc, char* argv[])
 		stars.push_back(Star(pos, vel));
 	}
 
-	kiko::vec2 position{ 400, 300 };
-	kiko::Transform transform{ { 400, 300 }, 0, 3 };
+	kiko::Scene scene;
 
-	float speed = 200;
-	constexpr float turnRate = kiko::DegreesToRadians(180);
-
-	Player player{ 200, kiko::Pi, { { 400, 300 }, 0, 6 }, model };
-
-	std::vector<Enemy> enemies;
-	for (int i = 0; i < 100; i++)
+	scene.Add(new Player{ 200, kiko::Pi, { { 400, 300 }, 0, 6 }, model });
+	for (int i = 0; i < 5; i++)
 	{
-		Enemy enemy{ 300, kiko::Pi, { { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model};
-		enemies.push_back(enemy);
+		Enemy* enemy = new Enemy{ 300, kiko::Pi, { { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model};
+		scene.Add(enemy);
 	}
 
 	// main game loop
@@ -86,8 +85,7 @@ int main(int argc, char* argv[])
 		}
 
 		// update game
-		player.Update(kiko::g_time.GetDeltaTime());
-		for (auto& enemy : enemies)	enemy.Update(kiko::g_time.GetDeltaTime());
+		scene.Update(kiko::g_time.GetDeltaTime());
 
 		// draw game
 		kiko::g_renderer.SetColor(0, 0, 0, 0);
@@ -98,12 +96,9 @@ int main(int argc, char* argv[])
 			kiko::g_renderer.SetColor(kiko::random(256), kiko::random(256), kiko::random(256), 255);
 			star.Draw(kiko::g_renderer);
 		}
-		player.Draw(kiko::g_renderer);
-		for (auto& enemy : enemies)
-		{
-			kiko::g_renderer.SetColor(kiko::random(256), kiko::random(256), kiko::random(256), 255);
-			enemy.Draw(kiko::g_renderer);
-		}
+
+		kiko::g_renderer.SetColor(255, 255, 255, 255);
+		scene.Draw(kiko::g_renderer);
 		
 		kiko::g_renderer.EndFrame();
 	}
