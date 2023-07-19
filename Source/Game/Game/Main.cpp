@@ -41,8 +41,7 @@ public:
 
 int main(int argc, char* argv[])
 {
-	kiko::g_memoryTracker.DisplayInfo();
-
+	kiko::MemoryTracker::Initialize();
 	kiko::seedRandom((unsigned int)time(nullptr));
 	kiko::setFilePath("assets");
 
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < 5; i++)
 	{
-		unique_ptr<Enemy> enemy = make_unique<Enemy>(300.0f, kiko::Pi, kiko::Transform{ { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model);
+		unique_ptr<Enemy> enemy = make_unique<Enemy>(kiko::randomf(75.0f, 150.0f), kiko::Pi, kiko::Transform{ { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model);
 		scene.Add(std::move(enemy));
 	}
 
@@ -109,7 +108,6 @@ int main(int argc, char* argv[])
 
 	stars.clear();
 	scene.RemoveAll();
-	kiko::g_memoryTracker.DisplayInfo();
 
 	return 0;
 }
