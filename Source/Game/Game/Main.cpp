@@ -1,9 +1,10 @@
 #include "Core/Core.h"
 #include "Renderer/Renderer.h"
-#include "Renderer/Model.h"
+#include "Renderer/ModelManager.h"
 #include "Input/InputSystem.h"
 #include "Audio/AudioSystem.h"
 #include "Framework/Scene.h"
+#include "Renderer/Text.h"
 #include "Player.h"
 #include "Enemy.h"
 
@@ -53,8 +54,11 @@ int main(int argc, char* argv[])
 	kiko::g_audioSystem.Initialize();
 	kiko::g_audioSystem.AddAudio("hit", "hit.wav");
 
-	kiko::Model model;
-	model.Load("ship.txt");
+	// create font / text objects
+	std::shared_ptr<kiko::Font> font = std::make_shared<kiko::Font>("arcadeclassic.ttf", 24);
+	std::unique_ptr<kiko::Text> text = std::make_unique<kiko::Text>(font);
+	text->Create(kiko::g_renderer, "SCORE 0000", kiko::Color{ 1, 0, 1, 1 });
+
 
 	vector<Star> stars;
 	for (int i = 0; i < 1000; i++)
@@ -66,12 +70,14 @@ int main(int argc, char* argv[])
 	}
 
 	kiko::Scene scene;
-	unique_ptr<Player> player = make_unique<Player>(200.0f, kiko::Pi, kiko::Transform{ { 400, 300 }, 0, 6 }, model);
+	unique_ptr<Player> player = make_unique<Player>(200.0f, kiko::Pi, kiko::Transform{ { 400, 300 }, 0, 6 }, kiko::g_manager.Get("ship.txt"));
+	player->m_tag = "Player";
 	scene.Add(std::move(player));
 
 	for (int i = 0; i < 5; i++)
 	{
-		unique_ptr<Enemy> enemy = make_unique<Enemy>(kiko::randomf(75.0f, 150.0f), kiko::Pi, kiko::Transform{ { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, model);
+		unique_ptr<Enemy> enemy = make_unique<Enemy>(kiko::randomf(75.0f, 150.0f), kiko::Pi, kiko::Transform{ { kiko::random(800), kiko::random(600) }, kiko::randomf(kiko::TwoPi), 3}, kiko::g_manager.Get("enemy.txt"));
+		enemy->m_tag = "Enemy";
 		scene.Add(std::move(enemy));
 	}
 
@@ -102,6 +108,7 @@ int main(int argc, char* argv[])
 
 		kiko::g_renderer.SetColor(255, 255, 255, 255);
 		scene.Draw(kiko::g_renderer);
+		text->Draw(kiko::g_renderer, 40, 30);
 		
 		kiko::g_renderer.EndFrame();
 	}
