@@ -10,7 +10,7 @@ void Enemy::Update(float dt)
 	Player* player = m_scene->GetActor<Player>();
 	if (player)
 	{
-		kiko::Vector2 direction = player->m_transform.position - m_transform.position;
+		kiko::vec2 direction = player->m_transform.position - m_transform.position;
 		m_transform.rotation = direction.Angle() + kiko::HalfPi;
 	}
 

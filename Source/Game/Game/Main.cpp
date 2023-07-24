@@ -4,7 +4,9 @@
 #include "Input/InputSystem.h"
 #include "Audio/AudioSystem.h"
 #include "Framework/Scene.h"
+#include "Framework/Emitter.h"
 #include "Renderer/Text.h"
+#include "Renderer/ParticleSystem.h"
 #include "Player.h"
 #include "Enemy.h"
 
@@ -93,8 +95,32 @@ int main(int argc, char* argv[])
 			quit = true;
 		}
 
+		kiko::g_particleSystem.Update(kiko::g_time.GetDeltaTime());
+
 		// update game
 		scene.Update(kiko::g_time.GetDeltaTime());
+		if (kiko::g_inputSystem.GetMouseButtonDown(0) &&
+			!kiko::g_inputSystem.GetPreviousMouseButtonDown(0))
+		{
+			kiko::EmitterData data;
+			data.burst = true;
+			data.burstCount = 100;
+			data.spawnRate = 200;
+			data.angle = 0;
+			data.angleRange = kiko::Pi;
+			data.lifetimeMin = 0.5f;
+			data.lifetimeMin = 1.5f;
+			data.speedMin = 50;
+			data.speedMax = 250;
+			data.damping = 0.5f;
+			
+			data.color = kiko::Color{ 1, 1, 1, 1 };
+
+			kiko::Transform transform{ { kiko::g_inputSystem.GetMousePosition() }, 0, 1};
+			auto emitter = std::make_unique<kiko::Emitter>(transform, data);
+			emitter->m_lifespan = 1.0f;
+			scene.Add(std::move(emitter));
+		}
 
 		// draw game
 		kiko::g_renderer.SetColor(0, 0, 0, 0);
@@ -106,9 +132,9 @@ int main(int argc, char* argv[])
 			star.Draw(kiko::g_renderer);
 		}
 
-		kiko::g_renderer.SetColor(255, 255, 255, 255);
 		scene.Draw(kiko::g_renderer);
 		text->Draw(kiko::g_renderer, 40, 30);
+		kiko::g_particleSystem.Draw(kiko::g_renderer);
 		
 		kiko::g_renderer.EndFrame();
 	}

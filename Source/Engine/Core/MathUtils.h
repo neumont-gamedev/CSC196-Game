@@ -21,24 +21,28 @@ namespace kiko
 	}
 
 	template <typename T>
-	inline T Max(T a, T b)
+	constexpr T Max(T a, T b)
 	{
 		return (a > b) ? a : b;
 	}
 
 	template <typename T>
-	inline T Min(T a, T b)
+	constexpr T Min(T a, T b)
 	{
 		return (a < b) ? a : b;
 	}
 
 	template <typename T>
-	inline T Clamp(T value, T min, T max)  // 4 - 10 -> 3
+	constexpr T Clamp(T value, T min, T max)
 	{
 		if (min > max) std::swap(min, max);
 
 		return (value < min) ? min : (value > max) ? max : value;
 	}
 
-
+	template<typename T> 
+	constexpr T Lerp(const T& a, const T& b, float t)
+	{
+		return (a * (1.0f - t)) + (b * t);
+	}
 }
