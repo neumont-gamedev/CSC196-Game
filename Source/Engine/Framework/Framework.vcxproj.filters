@@ -27,5 +27,8 @@
     <ClInclude Include="Emitter.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
