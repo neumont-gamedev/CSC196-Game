@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <utility>
 
 namespace kiko
 {
@@ -41,7 +42,7 @@ namespace kiko
 	}
 
 	template<typename T> 
-	constexpr T Lerp(const T& a, const T& b, float t)
+	constexpr T Lerp(const T& a, const T& b, float t) // t = 0 <-> 1
 	{
 		return (a * (1.0f - t)) + (b * t);
 	}

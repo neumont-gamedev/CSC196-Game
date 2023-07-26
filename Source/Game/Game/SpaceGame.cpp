@@ -20,6 +20,12 @@ bool SpaceGame::Initialize()
 	m_titleText = std::make_unique<kiko::Text>(m_font);
 	m_titleText->Create(kiko::g_renderer, "AZTEROIDS", kiko::Color{ 1, 1, 1, 1 });
 
+	m_gameoverText = std::make_unique<kiko::Text>(m_font);
+	m_gameoverText->Create(kiko::g_renderer, "GAME OVER", kiko::Color{ 1, 1, 1, 1 });
+
+	m_timerText = std::make_unique<kiko::Text>(m_font);
+	m_timerText->Create(kiko::g_renderer, "TIMER", kiko::Color{ 1, 1, 1, 1 });
+
 	// load audio
 	kiko::g_audioSystem.AddAudio("hit", "hit.wav");
 
@@ -53,14 +59,16 @@ void SpaceGame::Update(float dt)
 	case SpaceGame::eState::StartLevel:
 		m_scene->RemoveAll();
 	{
-		std::unique_ptr<Player> player = std::make_unique<Player>(200.0f, kiko::Pi, kiko::Transform{ { 400, 300 }, 0, 6 }, kiko::g_manager.Get("ship.txt"));
+		std::unique_ptr<Player> player = std::make_unique<Player>(20.0f, kiko::Pi, kiko::Transform{ { 400, 300 }, 0, 6 }, kiko::g_manager.Get("ship.txt"));
 		player->m_tag = "Player";
 		player->m_game = this;
+		player->SetDamping(0.9f);
 		m_scene->Add(std::move(player));
 	}
 	m_state = eState::Game;
 	break;
 	case SpaceGame::eState::Game:
+		m_gameTimer += dt;
 		m_spawnTimer += dt;
 		if (m_spawnTimer >= m_spawnTime)
 		{
@@ -71,18 +79,34 @@ void SpaceGame::Update(float dt)
 			m_scene->Add(std::move(enemy));
 		}
 		break;
-	case SpaceGame::eState::PlayerDead:
-		if (m_lives == 0) m_state = eState::GameOver;
-		else m_state = eState::StartLevel;
 
+	case eState::PlayerDeadStart:
+		m_stateTimer = 3;
+		if (m_lives == 0) m_state = eState::GameOver;
+		else m_state = eState::PlayerDead;
+		break;
+
+	case SpaceGame::eState::PlayerDead:
+		m_stateTimer -= dt;
+		if (m_stateTimer <= 0)
+		{
+			m_state = eState::StartLevel;
+		}
 		break;
 	case SpaceGame::eState::GameOver:
+		m_stateTimer -= dt;
+		if (m_stateTimer <= 0)
+		{
+			m_scene->RemoveAll();
+			m_state = eState::Title;
+		}
 		break;
 	default:
 		break;
 	}
 
 	m_scoreText->Create(kiko::g_renderer, std::to_string(m_score), {1, 1, 1, 1});
+	m_timerText->Create(kiko::g_renderer, std::to_string((int)m_gameTimer), {1, 1, 1, 1});
 	m_scene->Update(dt);
 }
 
@@ -92,7 +116,12 @@ void SpaceGame::Draw(kiko::Renderer & renderer)
 	{
 		m_titleText->Draw(renderer, 400, 300);
 	}
+	if (m_state == eState::GameOver)
+	{
+		m_gameoverText->Draw(renderer, 400, 300);
+	}
 
+	m_timerText->Draw(renderer, 400, 40);
 	m_scoreText->Draw(renderer, 40, 20);
 	m_scene->Draw(renderer);
 }
